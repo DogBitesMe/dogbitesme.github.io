@@ -21,13 +21,6 @@ jobs:
           npm install
           npm ci
           npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # 替換為您的 Vite 專案生成的構建目錄名稱，如果您使用的是 Vite 默認配置，則保持 "dist" 即可
-
   deploy:
     needs: build
     permissions:
