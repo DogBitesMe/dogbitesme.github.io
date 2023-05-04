@@ -40,7 +40,7 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
   }, [isListening]);
 
   const startSpeechRecognition = () => {
-    
+
     if (accessCode !== getEnvironmentVariable('ACCESS_CODE')) {
       notify.invalidAccessCodeNotify();
       setIsListening(false);
@@ -48,101 +48,93 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
       return;
     }
 
-        alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
+    //alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
 
       var mimeType: string;
-                if (MediaRecorder.isTypeSupported('audio/webm')) {
-                    mimeType = 'audio/webm';
-                } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                    mimeType = 'audio/ogg';
-                } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
-                    mimeType = 'audio/mpeg';
-                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                    mimeType = 'audio/mp4';
-                } 
-                else {
-                    console.error("no suitable mimetype found for this device");
-                    mimeType = "none";
-                }
-                alert(`supportedAudioType:${mimeType}`);
-
-                const options = { mimeType: mimeType };
-                var recorder = new MediaRecorder(stream, options);
-                recorder.ondataavailable = function (event) {
-                    let audioChunks = [];
-                    audioChunks.push(event.data);
-
-                    const audioBlob = new Blob(audioChunks, { type: mimeType });                                        
-                };
-                //recorder.start();
-            })
-            .catch(function(e) {
-                console.log(`get media err:${e}`);
-                alert(`Get media err:${e}`);
-            });
-
-
-    setWaiting(true);
-
-    if (subscriptionKey === '' || region === '') {
-      notify.emptyAzureKeyNotify();
-      setIsListening(false);
-      setWaiting(false);
-      return;
-    }
-
-
-    const speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, region);
-    speechConfig.speechRecognitionLanguage = language;
-
-    const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
-    const newRecognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
-
-    newRecognizer.recognizing = (s, e) => {
-      console.log(`Recognizing: ${e.result.text}`);
-    };
-
-    newRecognizer.recognized = (s, e) => {
-      console.log(`Recognized: ${e.result.text}`);
-      if (e.result.text !== undefined) {
-        setTranscript(e.result.text);
+      if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+        mimeType = 'audio/ogg';
+      } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+        mimeType = 'audio/mpeg';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
       }
-    };
-
-    newRecognizer.canceled = (s, e) => {
-      // @ts-ignore
-      if (e.errorCode === sdk.CancellationErrorCode.ErrorAPIKey) {
-        console.error('Invalid or incorrect subscription key');
-      } else {
-        console.log(`Canceled: ${e.errorDetails}`);
-        notify.azureRecognitionErrorNotify();
+      else {
+        console.error("no suitable mimetype found for this device");
+        mimeType = "none";
       }
-      setIsListening(false);
-      setWaiting(false);
-    };
+      alert(`supportedAudioType:${mimeType}`);
+      setWaiting(true);
 
-    newRecognizer.sessionStopped = (s, e) => {
-      console.log('Session stopped');
-      newRecognizer.stopContinuousRecognitionAsync();
-      setIsListening(false);
-      setWaiting(false);
-    };
-
-    newRecognizer.startContinuousRecognitionAsync(
-      () => {
+      if (subscriptionKey === '' || region === '') {
+        notify.emptyAzureKeyNotify();
+        setIsListening(false);
         setWaiting(false);
-        console.log('Listening...');
-      },
-      error => {
-        console.log(`Error: ${error}`);
-        notify.azureRecognitionErrorNotify();
+        return;
+      }
+
+
+      const speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, region);
+      speechConfig.speechRecognitionLanguage = language;
+
+      const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
+      const newRecognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+
+      newRecognizer.recognizing = (s, e) => {
+        console.log(`Recognizing: ${e.result.text}`);
+      };
+
+      newRecognizer.recognized = (s, e) => {
+        console.log(`Recognized: ${e.result.text}`);
+        if (e.result.text !== undefined) {
+          setTranscript(e.result.text);
+        }
+      };
+
+      newRecognizer.canceled = (s, e) => {
+        // @ts-ignore
+        if (e.errorCode === sdk.CancellationErrorCode.ErrorAPIKey) {
+          console.error('Invalid or incorrect subscription key');
+        } else {
+          console.log(`Canceled: ${e.errorDetails}`);
+          notify.azureRecognitionErrorNotify();
+        }
+        setIsListening(false);
+        setWaiting(false);
+      };
+
+      newRecognizer.sessionStopped = (s, e) => {
+        console.log('Session stopped');
         newRecognizer.stopContinuousRecognitionAsync();
         setIsListening(false);
-      }
-    );
+        setWaiting(false);
+      };
 
-    setRecognizer(newRecognizer);
+      newRecognizer.startContinuousRecognitionAsync(
+        () => {
+          setWaiting(false);
+          console.log('Listening...');
+        },
+        error => {
+          console.log(`Error: ${error}`);
+          notify.azureRecognitionErrorNotify();
+          newRecognizer.stopContinuousRecognitionAsync();
+          setIsListening(false);
+        }
+      );
+
+      setRecognizer(newRecognizer);
+
+    })
+      .catch(function (e) {
+        console.log(`get media err:${e}`);
+        alert(`Get media err:${e}`);
+      });
+
+
+
   };
 
   return null;
