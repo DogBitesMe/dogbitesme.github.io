@@ -40,6 +40,7 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
   }, [isListening]);
 
   const startSpeechRecognition = () => {
+    alert("startSpeechRecognition");
     if (accessCode !== getEnvironmentVariable('ACCESS_CODE')) {
       notify.invalidAccessCodeNotify();
       setIsListening(false);
