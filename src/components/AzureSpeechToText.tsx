@@ -40,7 +40,7 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
   }, [isListening]);
 
   const startSpeechRecognition = () => {
-    alert("startSpeechRecognition");
+    
     if (accessCode !== getEnvironmentVariable('ACCESS_CODE')) {
       notify.invalidAccessCodeNotify();
       setIsListening(false);
@@ -57,6 +57,8 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
       return;
     }
 
+    alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
+    navigator.mediaDevices.enumerateDevices();
     const speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, region);
     speechConfig.speechRecognitionLanguage = language;
 
