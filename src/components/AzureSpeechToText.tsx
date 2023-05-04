@@ -58,7 +58,39 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
     }
 
     alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
-    navigator.mediaDevices.enumerateDevices();
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+
+      var mimeType: string;
+                if (MediaRecorder.isTypeSupported('audio/webm')) {
+                    mimeType = 'audio/webm';
+                } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                    mimeType = 'audio/ogg';
+                } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+                    mimeType = 'audio/mpeg';
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    mimeType = 'audio/mp4';
+                } 
+                else {
+                    console.error("no suitable mimetype found for this device");
+                    mimeType = "none";
+                }
+                alert(`supportedAudioType:${mimeType}`);
+
+                const options = { mimeType: mimeType };
+                var recorder = new MediaRecorder(stream, options);
+                recorder.ondataavailable = function (event) {
+                    let audioChunks = [];
+                    audioChunks.push(event.data);
+
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });                                        
+                };
+                //recorder.start();
+            })
+            .catch(function(e) {
+                console.log(`get media err:${e}`);
+                alert(`Get media err:${e}`);
+            });
+
     const speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, region);
     speechConfig.speechRecognitionLanguage = language;
 
