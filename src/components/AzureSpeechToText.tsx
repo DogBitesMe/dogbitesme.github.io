@@ -48,16 +48,7 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
       return;
     }
 
-    setWaiting(true);
-
-    if (subscriptionKey === '' || region === '') {
-      notify.emptyAzureKeyNotify();
-      setIsListening(false);
-      setWaiting(false);
-      return;
-    }
-
-    alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
+        alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
 
       var mimeType: string;
@@ -90,6 +81,17 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
                 console.log(`get media err:${e}`);
                 alert(`Get media err:${e}`);
             });
+
+
+    setWaiting(true);
+
+    if (subscriptionKey === '' || region === '') {
+      notify.emptyAzureKeyNotify();
+      setIsListening(false);
+      setWaiting(false);
+      return;
+    }
+
 
     const speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, region);
     speechConfig.speechRecognitionLanguage = language;
