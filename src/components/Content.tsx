@@ -215,7 +215,8 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
       setSendMessages(false);
       chatDB.chat.add({ role: 'assistant', content: response, sessionId: currentSessionId });
 
-      if (!isIOSBrowser()) {  //iOS只能在user点击的时候播放
+      //if (!isIOSBrowser()) 
+      {  //iOS只能在user点击的时候播放
         generateSpeech(response);
       }
 
