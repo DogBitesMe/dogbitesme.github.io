@@ -29,6 +29,13 @@ interface ContentProps {
   notify: any;
 }
 
+// 擴展 Window 接口以包含 MSStream 屬性
+declare global {
+  interface Window {
+    MSStream: any;
+  }
+}
+
 const useIsMount = () => {
   const isMountRef = useRef(true);
   useEffect(() => {
@@ -173,7 +180,7 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
       secretAccessKey: secretAccessKey,
       notify: notify,
       resolve: () => {
-        alert("speechSynthesis done");
+        //alert("speechSynthesis done");
         console.log('Audio finished playing');
         setStatus('idle');
         setFinished(true);
@@ -197,12 +204,20 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
     }
   }, [transcript]);
 
+
+
+  function isIOSBrowser(): boolean {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
   useEffect(() => {
     if (response.length !== 0 && response !== 'undefined') {
       setSendMessages(false);
       chatDB.chat.add({ role: 'assistant', content: response, sessionId: currentSessionId });
 
-      generateSpeech(response);
+      if (!isIOSBrowser()) {  //iOS只能在user点击的时候播放
+        generateSpeech(response);
+      }
 
     }
   }, [response]);

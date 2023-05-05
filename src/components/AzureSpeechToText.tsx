@@ -69,7 +69,7 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
         console.error("no suitable mimetype found for this device");
         mimeType = "none";
       }
-      alert(`supportedAudioType:${mimeType}`);
+      //alert(`supportedAudioType:${mimeType}`);
       setWaiting(true);
 
       if (subscriptionKey === '' || region === '') {
