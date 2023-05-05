@@ -30,7 +30,7 @@ interface getPollyVoicesOptions {
 
 const synthesis = window.speechSynthesis;
 let pollyAudio: HTMLAudioElement | null = null;
-let azureAudio: SpeakerAudioDestination | null = null;
+//let azureAudio: SpeakerAudioDestination | null = null;
 
 async function getPollyVoices({
   text,
@@ -72,108 +72,119 @@ export function speechSynthesis({
   notify,
   resolve,
   reject,
-}: SpeechSynthesisOptions): void {  
-  
-    const speakWithVoice = () => {
-      const synthesis = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(text);
+}: SpeechSynthesisOptions): void {
+  const speakWithVoice = () => {
+    const synthesis = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
 
-      utterance.lang = language;
-      utterance.rate = rate || 1;
-      utterance.pitch = pitch || 1;
+    utterance.lang = language;
+    utterance.rate = rate || 1;
+    utterance.pitch = pitch || 1;
 
-      const voice = synthesis.getVoices().find(v => v.name === voiceName);
+    const voice = synthesis.getVoices().find(v => v.name === voiceName);
 
-      if (voice) {
-        utterance.voice = voice;
+    if (voice) {
+      utterance.voice = voice;
+    }
+    console.log(utterance);
+
+    // Add the 'end' event listener to resolve the Promise
+    utterance.addEventListener('end', () => {
+      resolve(null);
+    });
+
+    // Add the 'error' event listener to reject the Promise
+    utterance.addEventListener('error', error => {
+      if (error.error === 'interrupted') {
+        return;
       }
-      console.log(utterance);
+      notify.errorBuiltinSpeechSynthesisNotify();
+      reject(error);
+    });
 
-      // Add the 'end' event listener to resolve the Promise
-      utterance.addEventListener('end', () => {
-        resolve(null);
-      });
+    synthesis.speak(utterance);
+  };
 
-      // Add the 'error' event listener to reject the Promise
-      utterance.addEventListener('error', error => {
-        if (error.error === 'interrupted') {
-          return;
-        }
-        notify.errorBuiltinSpeechSynthesisNotify();
-        reject(error);
-      });
-
-      synthesis.speak(utterance);
-    };
-
-    switch (service) {
-      case 'System':
-        if (window.speechSynthesis.getVoices().length === 0) {
-          window.speechSynthesis.onvoiceschanged = () => {
-            speakWithVoice();
-          };
-        } else {
+  switch (service) {
+    case 'System':
+      if (window.speechSynthesis.getVoices().length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
           speakWithVoice();
-        }
-        break;
-      case 'Amazon Polly':
-        getPollyVoices({
-          text,
-          voiceName,
-          engine: pollyEngineName(engine) || 'neural',
-          region: region || 'us-east-1',
-          accessKeyId: accessKeyId || '', //
-          secretAccessKey: secretAccessKey || '',
-        })
-          .then(url => {
-            pollyAudio = new Audio(url as string);
-            pollyAudio.play();
-            pollyAudio.onended = () => {
-              resolve(null);
-            };
-            pollyAudio.onerror = error => {
-              reject(error);
-              notify.awsErrorNotify();
-            };
-          })
-          .catch(error => {
+        };
+      } else {
+        speakWithVoice();
+      }
+      break;
+    case 'Amazon Polly':
+      getPollyVoices({
+        text,
+        voiceName,
+        engine: pollyEngineName(engine) || 'neural',
+        region: region || 'us-east-1',
+        accessKeyId: accessKeyId || '', //
+        secretAccessKey: secretAccessKey || '',
+      })
+        .then(url => {
+          pollyAudio = new Audio(url as string);
+          pollyAudio.play();
+          pollyAudio.onended = () => {
+            resolve(null);
+          };
+          pollyAudio.onerror = error => {
             reject(error);
             notify.awsErrorNotify();
-          });
-        break;
-      case 'Azure TTS':
-        if (secretAccessKey == '') {
-          reject('Azure access key is empty');
-          notify.emptyAzureKeyNotify();
-          return;
-        }
-        // Check if secret access key and region is valid
-        getAzureToken(secretAccessKey || '', region || 'eastus')
-          .then(token => {})
-          .catch(error => {
-            notify.invalidAzureKeyNotify();
-            reject(error);
-          });
-        speechSynthesizeWithAzure(
-          secretAccessKey || '',
-          region || 'eastus',
-          text,
-          voiceName,
-          language
-        )
-          .then(player => {
+          };
+        })
+        .catch(error => {
+          reject(error);
+          notify.awsErrorNotify();
+        });
+      break;
+    case 'Azure TTS':
+      if (secretAccessKey == '') {
+        reject('Azure access key is empty');
+        notify.emptyAzureKeyNotify();
+        return;
+      }
+      // Check if secret access key and region is valid
+      getAzureToken(secretAccessKey || '', region || 'eastus')
+        .then(token => {})
+        .catch(error => {
+          notify.invalidAzureKeyNotify();
+          reject(error);
+        });
+
+      async function playSpeech(audioData: ArrayBuffer): Promise<void> {
+        const audioContext = new AudioContext();
+        const decodedData = await audioContext.decodeAudioData(audioData);
+        const bufferSource = audioContext.createBufferSource();
+        bufferSource.buffer = decodedData;
+        bufferSource.connect(audioContext.destination);
+        bufferSource.start(0);
+      }
+
+      speechSynthesizeWithAzure(
+        secretAccessKey || '',
+        region || 'eastus',
+        text,
+        voiceName,
+        language
+      )
+        .then(data => {
+          /*
             azureAudio = player;
             player.onAudioEnd = () => {
               resolve(null);
-            };
-          })
-          .catch(error => {
-            console.error(error);
-            notify.azureSynthesisErrorNotify();
-            reject(error);
-          });
-        break;
-  };
+            };*/
+          playSpeech(data);
+        })
+        .catch(error => {
+          console.error(error);
+          notify.azureSynthesisErrorNotify();
+          reject(error);
+        });
+      break;
+  }
 }
 
 export function stopSpeechSynthesis() {
@@ -186,10 +197,11 @@ export function stopSpeechSynthesis() {
     pollyAudio.pause();
     pollyAudio.currentTime = 0;
   }
+  /*
   if (azureAudio) {
     azureAudio.pause();
     azureAudio.close();
-  }
+  }*/
 }
 
 export function pauseSpeechSynthesis() {
@@ -201,9 +213,10 @@ export function pauseSpeechSynthesis() {
   if (pollyAudio) {
     pollyAudio.pause();
   }
+  /*
   if (azureAudio) {
     azureAudio.pause();
-  }
+  }*/
 }
 
 export function resumeSpeechSynthesis() {
@@ -215,7 +228,8 @@ export function resumeSpeechSynthesis() {
   if (pollyAudio) {
     pollyAudio.play();
   }
+  /*
   if (azureAudio) {
     azureAudio.resume();
-  }
+  }*/
 }
