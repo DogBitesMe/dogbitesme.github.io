@@ -160,35 +160,33 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
         break;
     }
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-      speechSynthesis({
-        text: text,
-        service: speech.service,
-        language: language,
-        rate: rate,
-        pitch: pitch,
-        voiceName: voiceName,
-        engine: speech.pollyEngine,
-        region: region,
-        accessKeyId: accessKeyId,
-        secretAccessKey: secretAccessKey,
-        notify: notify,
-      })
-        .then(() => {
-          alert("speechSynthesis done");
-          console.log('Audio finished playing');
-          setStatus('idle');
-          setFinished(true);
-        })
-        .catch(error => {
-          alert("speechSynthesis err: " + error);
-          if (error.error === 'interrupted') {
-            console.log('Speech synthesis interrupted');
-          } else {
-            console.error('An error occurred during speech synthesis:', error);
-          }
-          setStatus('idle');
-        });
+    speechSynthesis({
+      text: text,
+      service: speech.service,
+      language: language,
+      rate: rate,
+      pitch: pitch,
+      voiceName: voiceName,
+      engine: speech.pollyEngine,
+      region: region,
+      accessKeyId: accessKeyId,
+      secretAccessKey: secretAccessKey,
+      notify: notify,
+      resolve: () => {
+        alert("speechSynthesis done");
+        console.log('Audio finished playing');
+        setStatus('idle');
+        setFinished(true);
+      },
+      reject: error => {
+        alert("speechSynthesis err: " + error);
+        if (error.error === 'interrupted') {
+          console.log('Speech synthesis interrupted');
+        } else {
+          console.error('An error occurred during speech synthesis:', error);
+        }
+        setStatus('idle');
+      }
     });
 
   };

@@ -15,6 +15,8 @@ interface SpeechSynthesisOptions {
   accessKeyId?: string;
   secretAccessKey?: string;
   notify: any;
+  resolve: (value: any) => void;
+  reject: (reason?: any) => void;
 }
 
 interface getPollyVoicesOptions {
@@ -68,8 +70,10 @@ export function speechSynthesis({
   accessKeyId,
   secretAccessKey,
   notify,
-}: SpeechSynthesisOptions): Promise<void> {
-  return new Promise((resolve, reject) => {
+  resolve,
+  reject,
+}: SpeechSynthesisOptions): void {  
+  
     const speakWithVoice = () => {
       const synthesis = window.speechSynthesis;
       const utterance = new SpeechSynthesisUtterance(text);
@@ -87,7 +91,7 @@ export function speechSynthesis({
 
       // Add the 'end' event listener to resolve the Promise
       utterance.addEventListener('end', () => {
-        resolve();
+        resolve(null);
       });
 
       // Add the 'error' event listener to reject the Promise
@@ -125,7 +129,7 @@ export function speechSynthesis({
             pollyAudio = new Audio(url as string);
             pollyAudio.play();
             pollyAudio.onended = () => {
-              resolve();
+              resolve(null);
             };
             pollyAudio.onerror = error => {
               reject(error);
@@ -150,9 +154,7 @@ export function speechSynthesis({
             notify.invalidAzureKeyNotify();
             reject(error);
           });
-
-        navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-           speechSynthesizeWithAzure(
+        speechSynthesizeWithAzure(
           secretAccessKey || '',
           region || 'eastus',
           text,
@@ -162,7 +164,7 @@ export function speechSynthesis({
           .then(player => {
             azureAudio = player;
             player.onAudioEnd = () => {
-              resolve();
+              resolve(null);
             };
           })
           .catch(error => {
@@ -170,12 +172,8 @@ export function speechSynthesis({
             notify.azureSynthesisErrorNotify();
             reject(error);
           });
-        });
-
-       
         break;
-    }
-  });
+  };
 }
 
 export function stopSpeechSynthesis() {

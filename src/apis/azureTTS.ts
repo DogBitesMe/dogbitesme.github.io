@@ -14,8 +14,7 @@ const speechSynthesizeWithAzure = async (
   speechConfig.speechSynthesisVoiceName = voiceName;
   const player = new sdk.SpeakerAudioDestination();
   const audioConfig = sdk.AudioConfig.fromSpeakerOutput(player);
-  //const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
-  const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig);
+  const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
   alert(`Azure speech synthesis ${subscriptionKey} ${region} ${text} ${voiceName} ${language}`);
   speechSynthesizer.speakTextAsync(
     text,
