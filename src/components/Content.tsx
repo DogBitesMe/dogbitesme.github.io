@@ -105,7 +105,7 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
     });
   };
 
-  const generateSpeech = async (text: string) => {
+  const generateSpeech = (text: string) => {
     if (disableSpeaker) {
       return;
     }
@@ -201,9 +201,9 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
     if (response.length !== 0 && response !== 'undefined') {
       setSendMessages(false);
       chatDB.chat.add({ role: 'assistant', content: response, sessionId: currentSessionId });
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-        generateSpeech(response).then();
-      });
+
+      generateSpeech(response);
+
     }
   }, [response]);
 
@@ -498,11 +498,7 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
           conversations={conversations}
           copyContentToClipboard={copyContentToClipboard}
           deleteContent={deleteContent}
-          generateSpeech={(s) => {
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-              generateSpeech(s);
-            });
-          }}
+          generateSpeech={generateSpeech}
         />
       </div>
       <div className="">
