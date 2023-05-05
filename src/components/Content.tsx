@@ -175,11 +175,13 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
         notify: notify,
       })
         .then(() => {
+          alert("speechSynthesis done");
           console.log('Audio finished playing');
           setStatus('idle');
           setFinished(true);
         })
         .catch(error => {
+          alert("speechSynthesis err: " + error);
           if (error.error === 'interrupted') {
             console.log('Speech synthesis interrupted');
           } else {
@@ -201,7 +203,9 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
     if (response.length !== 0 && response !== 'undefined') {
       setSendMessages(false);
       chatDB.chat.add({ role: 'assistant', content: response, sessionId: currentSessionId });
-      generateSpeech(response).then();
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        generateSpeech(response).then();
+      });
     }
   }, [response]);
 
@@ -496,7 +500,11 @@ const Content: React.FC<ContentProps> = ({ notify }) => {
           conversations={conversations}
           copyContentToClipboard={copyContentToClipboard}
           deleteContent={deleteContent}
-          generateSpeech={generateSpeech}
+          generateSpeech={(s) => {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+              generateSpeech(s);
+            });
+          }}
         />
       </div>
       <div className="">
