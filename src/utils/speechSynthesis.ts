@@ -150,7 +150,9 @@ export function speechSynthesis({
             notify.invalidAzureKeyNotify();
             reject(error);
           });
-        speechSynthesizeWithAzure(
+
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+           speechSynthesizeWithAzure(
           secretAccessKey || '',
           region || 'eastus',
           text,
@@ -168,6 +170,9 @@ export function speechSynthesis({
             notify.azureSynthesisErrorNotify();
             reject(error);
           });
+        });
+
+       
         break;
     }
   });

@@ -49,6 +49,10 @@ const AzureSpeechToText: React.FC<AzureSpeechToTextProps> = ({
     }
 
     //alert(`startSpeechRecognition ${subscriptionKey}, ${region}, ${language}`);
+    /*
+    在iPhone上必須先取得使用者的同意才能使用麥克風
+    語音辨識服務必須在getUserMedia的then裡面才能呼叫不然會沒有反應
+     */
     navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
 
       var mimeType: string;
